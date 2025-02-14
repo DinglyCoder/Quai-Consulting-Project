@@ -1,5 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+import random
+from player import Player
 
 def get_dexscreener_price(blockchain: str, pair_address: str):
     url = f"https://api.dexscreener.com/latest/dex/pairs/{blockchain}/{pair_address}"
@@ -52,13 +54,21 @@ def ronaldo_coin_price():
 
 # ronaldo_coin_price()
 
-def get_top_gecko_coins_by_volume():
+def calculate_earning(winning_pool, losing_pool):
+    total_pool = winning_pool + losing_pool
+    house_earnings = total_pool * 0.05
+    total_pool -= house_earnings
+
+    
+
+def get_random_coin():
+    page = random.randint(1, 172)
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
         "vs_currency": "usd",
         "order": "volume_desc",
         "per_page": 10,  # Get top 10 coins
-        "page": 6,
+        "page": page,
         "sparkline": "false"
     }
 
@@ -66,22 +76,30 @@ def get_top_gecko_coins_by_volume():
 
     if response.status_code == 200:
         data = response.json()
-        print("\n🔝 Top 10 Cryptos by 24H Volume 🔝\n")
-        for i, coin in enumerate(data):
-            name = coin["name"]
-            symbol = coin["symbol"].upper()
-            price = coin["current_price"]
-            volume = coin["total_volume"]
-            market_cap = coin["market_cap"]
-            coingecko_url = f"https://www.coingecko.com/en/coins/{coin['id']}"
+        print("Random Coin")
+        r = random.randint(1,10)
+        rand = data[r]
+        name = rand["name"]
+        symbol = rand["symbol"].upper()
+        price = rand["current_price"]
+        volume = rand["total_volume"]
+        market_cap = rand["market_cap"]
+        coingecko_url = f"https://www.coingecko.com/en/coins/{rand['id']}"
 
-            print(f"{i+1}. {name} ({symbol})")
-            print(f"   💰 Price: ${price}")
-            print(f"   📊 24H Volume: ${volume:,}")
-            print(f"   🏦 Market Cap: ${market_cap:,}")
-            print(f"   🔗 CoinGecko: {coingecko_url}\n")
+        print(f"1. {name} ({symbol})")
+        print(f"   💰 Price: ${price}")
+        print(f"   📊 24H Volume: ${volume:,}")
+        print(f"   🏦 Market Cap: ${market_cap:,}")
+        print(f"   🔗 CoinGecko: {coingecko_url}\n")
     else:
         print(f"Error fetching data: {response.status_code}")
+    return [name, symbol, price, volume, market_cap, coingecko_url]
 
-# Run the function
-get_top_gecko_coins_by_volume()
+def main():
+    coin_info = get_random_coin()
+    coin_name = coin_info[0]
+    coin_price = coin_info[2]
+
+if __name__ == "__main__":
+    main()
+    
