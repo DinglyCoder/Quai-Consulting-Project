@@ -1,15 +1,7 @@
 class PlayerData:
-    buyPrice = 0
-    sellPrice = 0
-    def __init__(self, name, email):
+    def __init__(self, name, bet):
         self.name = name
-        self.email = email
         self.earnings = 0
-        
-
-    def processBuy(self, price):
-        self.buyPrice = price
-
-    def processSell(self, price):
-        self.sellPrice = price
-        self.earnings = self.sellPrice - self.buyPrice
+        self.buyPrice = 0
+        self.sellPrice = 0
+        self.bet = bet

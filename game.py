@@ -1,8 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import random
-from player import Player
-
+from player import PlayerData
 def get_dexscreener_price(blockchain: str, pair_address: str):
     url = f"https://api.dexscreener.com/latest/dex/pairs/{blockchain}/{pair_address}"
     response = requests.get(url)
@@ -14,7 +13,6 @@ def get_dexscreener_price(blockchain: str, pair_address: str):
     else:
         raise Exception(f"Error fetching data: {response.status_code}")
 
-# Example usage: Provide a Dex Screener pair URL
 pair_address = "46rt2qdb2a6lgrk2q8fw2qptbsh6yzt1mg9ba86wrgbi"
 blockchain = "solana"
 
@@ -42,24 +40,16 @@ def get_dex_trending_pairs():
 
     else:
         print(f"Error fetching data: {response.status_code}")
-    
-# get_dex_trending_pairs()
 
-def ronaldo_coin_price():
-    try:
-        price = get_dexscreener_price(blockchain, pair_address)
-        print(f"Price: {price}")    
-    except Exception as e:
-        print(e)
-
-# ronaldo_coin_price()
-
-def calculate_earning(winning_pool, losing_pool):
-    total_pool = winning_pool + losing_pool
+def calculate_earning(winning_pool, losing_pool, winners):
+    total_pool = losing_pool
     house_earnings = total_pool * 0.05
     total_pool -= house_earnings
+    for player in winners:
+        player_earnings = (player.bet / winning_pool) * total_pool
+        player.earnings += player_earnings
+    return house_earnings
 
-    
 
 def get_random_coin():
     page = random.randint(1, 172)
@@ -99,6 +89,27 @@ def main():
     coin_info = get_random_coin()
     coin_name = coin_info[0]
     coin_price = coin_info[2]
+    Sanika = PlayerData("Sanika", 100)
+    Ryan = PlayerData("Ryan", 50)
+    Ayush = PlayerData("Ayush", 70)
+    Shanti = PlayerData("Shanti", 20)
+    Prat = PlayerData("Prat", 50)
+    Ethan = PlayerData("Ethan", 30)
+
+    winners = [Sanika, Ryan, Ayush]
+    losers = [Shanti, Prat, Ethan]
+    winning_pool = 0
+    losing_pool = 0
+    for player in winners:
+        winning_pool += player.bet
+    for player in losers:
+        losing_pool += player.bet
+    house = calculate_earning(winning_pool, losing_pool, winners)
+    for player in winners:
+        print(f"{player.name} earned: ${player.earnings:.2f}")
+    for player in losers:
+        print(f"{player.name} lost: ${player.bet:.2f}")
+    print(house)
 
 if __name__ == "__main__":
     main()
