@@ -4,19 +4,6 @@ import random
 from player import PlayerData
 import time
 from tqdm import tqdm
-def get_dexscreener_price(blockchain: str, pair_address: str):
-    url = f"https://api.dexscreener.com/latest/dex/pairs/{blockchain}/{pair_address}"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        price = data["pairs"][0]["priceUsd"]  # Price in USD
-        return price
-    else:
-        raise Exception(f"Error fetching data: {response.status_code}")
-
-pair_address = "46rt2qdb2a6lgrk2q8fw2qptbsh6yzt1mg9ba86wrgbi"
-blockchain = "solana"
 
 def get_dex_trending_pairs():
     url = "https://api.dexscreener.com/latest/dex/trending"
@@ -26,10 +13,8 @@ def get_dex_trending_pairs():
         data = response.json()
         top_pairs = data.get("pairs", [])
         
-        # Sort pairs by 24h volume in descending order
         sorted_pairs = sorted(top_pairs, key=lambda x: float(x.get("txns", {}).get("h24", 0)), reverse=True)
 
-        # Print top 10 pairs
         for i, pair in enumerate(sorted_pairs[:10]):
             name = f"{pair['baseToken']['symbol']}/{pair['quoteToken']['symbol']}"
             volume = pair.get("volume", {}).get("h24", "N/A")
