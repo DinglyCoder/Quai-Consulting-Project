@@ -4,31 +4,11 @@ import random
 from player import PlayerData
 import time
 from tqdm import tqdm
+import Flask, jsonify
 
-def get_dex_trending_pairs():
-    url = "https://api.dexscreener.com/latest/dex/trending"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        top_pairs = data.get("pairs", [])
-        
-        sorted_pairs = sorted(top_pairs, key=lambda x: float(x.get("txns", {}).get("h24", 0)), reverse=True)
-
-        for i, pair in enumerate(sorted_pairs[:10]):
-            name = f"{pair['baseToken']['symbol']}/{pair['quoteToken']['symbol']}"
-            volume = pair.get("volume", {}).get("h24", "N/A")
-            price = pair.get("priceUsd", "N/A")
-            chain = pair.get("chainId", "N/A")
-            url = pair.get("url", "")
-
-            print(f"{i+1}. {name} - ${price} - 24H Volume: ${volume} - Chain: {chain}")
-            print(f"   Dex Screener Link: {url}\n")
-
-    else:
-        print(f"Error fetching data: {response.status_code}")
-
-def calculate_earning(players, coin_price, new_coin_price):
+app = Flask(__name__)
+@app.route("/calculate_earnings", methods=["GET"])
+def calculate_earnings(players, coin_price, new_coin_price):
     winners = []
     losers = []
     if new_coin_price > coin_price:
@@ -60,7 +40,7 @@ def calculate_earning(players, coin_price, new_coin_price):
         print(f"{player.name} lost: ${player.bet:.2f}")
     return house_earnings
 
-
+@app.route("/get_token_data", methods=["GET"])
 def get_token_data(symbol):
     API_KEY = "089c90ae-1dbb-411d-8b08-a776beaf5220"  # Replace with your CoinMarketCap API Key
     base_url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
@@ -84,7 +64,7 @@ def get_token_data(symbol):
     else:
         return {"error": f"API request failed with status code {response.status_code}"}
 
-
+@app.route("/get_random_coin", methods=["GET"])
 def get_random_coin():
     name, symbol, price, volume, market_cap, coingecko_url, page, r = "", "", "", "", "", "", "", ""
     while True:
@@ -122,8 +102,9 @@ def get_random_coin():
             break
         except Exception as e:
             print(e)
-    return [name, symbol, price, volume, market_cap, coingecko_url, page, r]
 
+    return jsonify({"name": name, "symbol": symbol, "price": price, "volume": volume, "market_cap": market_cap, "coingecko_url": coingecko_url})
+@app.route("/get_coin_price", methods=["GET"])
 def get_coin_price(arr):
     price_changed = False
     start_time = time.time()
@@ -146,8 +127,13 @@ def get_coin_price(arr):
         time.sleep(5)
     end_time = time.time()
     print(f"Time elapsed: {end_time - start_time:.2f} seconds")
-    return market_cap
 
+    if cur_market_cap > market_cap:
+        return jsonify({"result": "up"})
+    if cur_market_cap < market_cap:
+        return jsonify({"result": "down"})
+    
+    return jsonify({"result": "error"})
 
 
 def main():
@@ -163,7 +149,7 @@ def main():
     coin_price = coin_info[4]
     new_coin_price = get_coin_price(coin_info)
     print(new_coin_price)
-    house = calculate_earning(players, coin_price, new_coin_price)
+    house = calculate_earnings(players, coin_price, new_coin_price)
 
 if __name__ == "__main__":
     main()
