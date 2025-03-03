@@ -1,12 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
 import random
+from flask_cors import CORS
 from player import PlayerData
 import time
 from tqdm import tqdm
-import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="front")
+CORS(app)
+
+random_coin = []
+@app.route("/")
+def serve_frontend():
+    return send_from_directory("front", "index.html")
+
 @app.route("/calculate_earnings", methods=["GET"])
 def calculate_earnings(players, coin_price, new_coin_price):
     winners = []
@@ -102,19 +110,17 @@ def get_random_coin():
             break
         except Exception as e:
             print(e)
+    global random_coin
+    random_coin = [name, symbol, price, volume, market_cap, coingecko_url]
+    return random_coin
 
-    return jsonify({"name": name, "symbol": symbol, "price": price, "volume": volume, "market_cap": market_cap, "coingecko_url": coingecko_url})
 @app.route("/get_coin_price", methods=["GET"])
-def get_coin_price(arr):
+def get_coin_price():
+    global random_coin
+    arr = random_coin
+    print(arr)
     price_changed = False
     start_time = time.time()
-    while True:
-        try:
-            new_price = get_token_data(arr[1])["market_cap"]
-            break
-        except Exception as e:
-            print(e)
-        time.sleep(5)
     market_cap = get_token_data(arr[1])["market_cap"]
     print(f"Market Cap: ${market_cap}")
     while not price_changed:
@@ -129,28 +135,29 @@ def get_coin_price(arr):
     print(f"Time elapsed: {end_time - start_time:.2f} seconds")
 
     if cur_market_cap > market_cap:
-        return jsonify({"result": "up"})
+        return jsonify({"direction": "up"})
     if cur_market_cap < market_cap:
-        return jsonify({"result": "down"})
+        return jsonify({"direction": "down"})
     
-    return jsonify({"result": "error"})
+    return jsonify({"direction": "error"})
 
 
-def main():
-    Sanika = PlayerData("Sanika", 100, "up")
-    Ryan = PlayerData("Ryan", 50, "up")
-    Ayush = PlayerData("Ayush", 70, "up")
-    Shanti = PlayerData("Shanti", 20, "down")
-    Prat = PlayerData("Prat", 50, "down")
-    Ethan = PlayerData("Ethan", 30, "down")
+# def main():
+#     Sanika = PlayerData("Sanika", 100, "up")
+#     Ryan = PlayerData("Ryan", 50, "up")
+#     Ayush = PlayerData("Ayush", 70, "up")
+#     Shanti = PlayerData("Shanti", 20, "down")
+#     Prat = PlayerData("Prat", 50, "down")
+#     Ethan = PlayerData("Ethan", 30, "down")
 
-    players = [Sanika, Ryan, Ayush, Shanti, Prat, Ethan]
-    coin_info = get_random_coin()
-    coin_price = coin_info[4]
-    new_coin_price = get_coin_price(coin_info)
-    print(new_coin_price)
-    house = calculate_earnings(players, coin_price, new_coin_price)
+#     players = [Sanika, Ryan, Ayush, Shanti, Prat, Ethan]
+#     coin_info = get_random_coin()
+#     coin_price = coin_info[4]
+#     new_coin_price = get_coin_price(coin_info)
+#     print(new_coin_price)
+#     house = calculate_earnings(players, coin_price, new_coin_price)
 
 if __name__ == "__main__":
-    main()
-    
+    app.run(debug=True)
+
+        
